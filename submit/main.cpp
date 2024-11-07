@@ -33,13 +33,46 @@ public:
 		else return false;
 	}
 };
+
+// 최대값 반환
+int max(int x, int y) {
+	return (x >= y) ? x : y;
+}
+// 해당 노드의 height 반환
+int __height(Node* node) {
+	return node->height;
+}
+// 자신을 루트로 하는 트리의 모든 노드의 개수 반환
+int __size(Node* node) {
+	int cnt = 0;
+	if (node != nullptr)
+		cnt = 1 + __size(node->left) + __size(node->right);
+	return cnt;
+}
+// 최대 키 노드 반환
+Node* maxNode(Node* node, Stack& stack) {
+	while (node->right != nullptr) {
+		stack.push(node);
+		node = node->right;
+	}
+	return node;
+}
+// 최소 키 노드 반환
+Node* minNode(Node* node, Stack& stack) {
+	while (node->left != nullptr) {
+		stack.push(node);
+		node = node->left;
+	}
+	return node;
+}
+
 // BST에 새로운 노드 생성
 Node* getNodeBST() {
 	Node* newNode = new Node();
 	return newNode;
 }
 // BST 삽입 메서드
-bool insertBST(Node*& T, int newKey) {
+bool __insertBST(Node*& T, int newKey) {
 	Node* q = NULL; Node* p = T; // q는 p의 부모 노드
 
 	Stack stack;
@@ -71,34 +104,8 @@ bool insertBST(Node*& T, int newKey) {
 
 	return false;
 }
-// 해당 노드의 height 반환
-int height(Node* node) {
-	return node->height;
-}
-// 자신을 루트로 하는 트리의 모든 노드의 개수 반환
-int size(Node* node) {
-	int cnt = 0;
-	if (node != nullptr)
-		cnt = 1 + size(node->left) + size(node->right);
-	return cnt;
-}
-// 최대 키 노드 반환
-Node* maxNode(Node* node, Stack& stack) {
-	while (node->right != nullptr) {
-		stack.push(node);
-		node = node->right;
-	}
-	return node;
-}
-// 최소 키 노드 반환
-Node* minNode(Node* node, Stack& stack) {
-	while (node->left != nullptr) {
-		stack.push(node);
-		node = node->left;
-	}
-	return node;
-}
-bool deleteBST(Node*& T, int deleteKey) {
+// BST 삭제 메서드
+bool __eraseBST(Node*& T, int deleteKey) {
 	Node* p = T; Node* q = nullptr;
 
 	Stack stack;
@@ -119,16 +126,16 @@ bool deleteBST(Node*& T, int deleteKey) {
 	if (p->left != nullptr && p->right != nullptr) {
 		stack.push(p);
 		Node* tempNode = p;
-		if (height(p->left) > height(p->right)) {
+		if (__height(p->left) > __height(p->right)) {
 			// 왼쪽 서브 트리에서 최대 키 노드
 			p = maxNode(p->left, stack);
 		}
-		else if (height(p->left) < height(p->right)) {
+		else if (__height(p->left) < __height(p->right)) {
 			// 오른쪽 서브 트리에서 최소 키 노드
 			p = minNode(p->right, stack);
 		}
 		else {
-			if (size(p->left) >= size(p->right)) {
+			if (__size(p->left) >= __size(p->right)) {
 				// 왼쪽 서브 트리에서 최대 키 노드
 				p = maxNode(p->left, stack);
 			}
@@ -172,29 +179,58 @@ bool deleteBST(Node*& T, int deleteKey) {
 	return false;
 }
 // BST 메모리 삭제 메서드
-void clear(Node* T) {
+void __clearBST(Node* T) {
 	if (T->left != nullptr) {
-		clear(T->left);
+		__clearBST(T->left);
 	}
 	if (T->right != nullptr) {
-		clear(T->right);
+		__clearBST(T->right);
 	}
 	free(T);
 }
-void inOrder(Node* root) {
+// 트리 순회 메서드
+void __inOrder(Node* root) {
 	if (root == NULL)
 		return;
 	else {
 		cout << "<";
-		inOrder(root->left);
+		__inOrder(root->left);
 		cout << ' ' << root->key << ' ';
-		inOrder(root->right);
+		__inOrder(root->right);
 		cout << ">";
 	}
 }
+
+class BST {
+public:
+	Node* root;
+	BST() : root(nullptr) {};
+public:
+	int height() const {
+		return __height(root);
+	}
+public:
+	int size() const {
+		return __size(root);
+	}
+public:
+	void inOrder() const {
+		return __inOrder(root);
+	}
+public:
+	bool insert(const int key) {
+		return __insertBST(root, key);
+	}
+	bool erase(const int deleteKey) {
+		return __eraseBST(root, deleteKey);
+	}
+	void clear() {
+		return __clearBST(root);
+	}
+};
 int main() {
 
-	Node* T = nullptr;
+	BST T;
 
 	while (true) {
 		char command; int key;
@@ -204,24 +240,25 @@ int main() {
 			break;
 
 		if (command == 'i') {
-			if (insertBST(T, key)) {
+			if (T.insert(key)) {
 				cout << command << " " << key << ": The key already exists" << endl;
 			}
 			else {
-				inOrder(T);
+				T.inOrder();
 				cout << endl;
 			}
 		}
 		if (command == 'd') {
-			if (deleteBST(T, key)) {
+			if (T.erase(key)) {
 				cout << command << " " << key << ": The key does not exist" << endl;
 			}
 			else {
-				inOrder(T);
+				T.inOrder();
 				cout << endl;
 			}
 		}
 	}
-	clear(T);
+	T.clear();
+
 	return 0;
 }
